@@ -2,6 +2,29 @@
 
 import struct
 import json
+import os
+
+SKIP = 5
+
+# Load palette map json data
+with open("data/palette_map.json", 'r') as json_file:
+    network_color_map = json.load(json_file)
+
+# Load palette json data
+with open("data/palette.json", 'r') as json_file:
+    network_palette = json.load(json_file)
+
+def rts(n):
+    return int(n/SKIP)*SKIP
+
+def rgb_to_index(c):
+    # print(c)
+    c = (rts(c[0]), rts(c[1]), rts(c[2]))
+    index = network_color_map[f"{c[0]},{c[1]},{c[2]}"]
+    return index
+
+def index_to_rgb(i):
+    return network_palette["colors"][i]
 
 def read_int(file):
     return struct.unpack('<i', file.read(4))[0]
@@ -90,35 +113,29 @@ def read_vox_file(filename):
         if read_int(file) != 150:
             raise ValueError("Unsupported .vox version")
 
-        main_chunk_id = file.read(4)
-        if main_chunk_id != b'MAIN':
-            raise ValueError("Missing 'MAIN' chunk")
+        # Read MAIN chunk header
+        main_chunk_id, main_chunk_content_size, main_chunk_children_size = struct.unpack('<4sII', file.read(12))
+        assert main_chunk_id == b'MAIN', f"Invalid MAIN chunk ID: {main_chunk_id}"
+        main_chunk_end = file.tell() + main_chunk_children_size
 
-        read_int(file)  # num_bytes_in_main
-        read_int(file)  # num_bytes_in_child_chunks
+        size_x, size_y, size_z = 0, 0, 0
+        voxels = []
+        palette = default_palette()
 
-        while True:
-            chunk_id = file.read(4)
-            if not chunk_id:
-                break
-
-            chunk_size = read_int(file)
-            _ = read_int(file)  # num_bytes_in_child_chunks
-
+        # Process child chunks
+        while file.tell() < main_chunk_end:
+            chunk_id, chunk_content_size, chunk_children_size = struct.unpack('<4sII', file.read(12))
             if chunk_id == b'SIZE':
-                size_x, size_y, size_z = read_int(file), read_int(file), read_int(file)
+                size_x, size_y, size_z = struct.unpack('<3I', file.read(chunk_content_size))
             elif chunk_id == b'XYZI':
-                num_voxels = read_int(file)
-                for _ in range(num_voxels):
-                    x, y, z, color_index = struct.unpack('<BBBB', file.read(4))
-                    voxels.append((x, y, z, color_index))
+                num_voxels, = struct.unpack('<I', file.read(4))
+                voxels = [struct.unpack('<4B', file.read(4)) for _ in range(num_voxels)]
             elif chunk_id == b'RGBA':
-                palette = []
-                for _ in range(256):
-                    r, g, b, a = struct.unpack('<BBBB', file.read(4))
-                    palette.append((r, g, b))
+                palette_data = file.read(chunk_content_size)
+                palette = [struct.unpack_from('<4B', palette_data, i * 4) for i in range(256)]
             else:
-                file.read(chunk_size - 4)  # skip unknown chunk
+                # Ignore unsupported chunk and move to the next one
+                file.seek(chunk_content_size + chunk_children_size, os.SEEK_CUR)
 
     return size_x, size_y, size_z, voxels, palette
 
@@ -182,7 +199,23 @@ def convert_json_to_vox(input_filename, output_filename):
 
     size_x, size_y, size_z = data['size']['x'], data['size']['y'], data['size']['z']
     palette = []
-    voxels = [(voxel['x'], voxel['y'], voxel['z'], get_color_index(tuple(voxel['color']), palette)) for voxel in data['voxels']]
+    voxels = []
+    for pos in data['voxels']:
+        color_index = data['voxels'][pos]
+        pos = tuple(pos.split(','))
+        pos = (int(pos[0]), int(pos[1]), int(pos[2]))
+        # print(index_to_rgb(color_index))
+        ind = get_color_index(tuple(index_to_rgb(color_index)), palette)
+        voxels.append(
+            (
+                pos[0],
+                pos[1],
+                pos[2],
+                ind,
+            )
+        )
+
+    # voxels2 = [(voxel['x'], voxel['y'], voxel['z'], get_color_index(tuple(voxel['color']), palette)) for voxel in data['voxels']]
 
     write_vox_file(output_filename, size_x, size_y, size_z, voxels, palette)
 
@@ -193,7 +226,9 @@ def convert_vox_to_json(input_filename, output_filename):
         'voxels': {}
     }
     for x, y, z, color_index in voxels:
-        data["voxels"][f"{x},{y},{z}"] = palette[color_index - 1][:3]
+        # Convert vox palette index to rgb, then to an index in the network's palette
+        my_palette_index = rgb_to_index(palette[color_index - 1][:3])
+        data["voxels"][f"{x},{y},{z}"] = my_palette_index
 
     with open(output_filename, 'w') as output_file:
         json.dump(data, output_file, indent=2)

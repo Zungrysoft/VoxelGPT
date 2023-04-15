@@ -3,7 +3,7 @@ import math
 import json
 import sys
 
-TILE_SIZE = 32
+TILE_SIZE = 1
 
 def convert(input_file_name, output_file_name):
     with open(input_file_name, 'r') as json_file:
