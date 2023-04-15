@@ -3,7 +3,7 @@ import math
 import json
 import sys
 
-SKIP = 1
+SKIP = 5
 
 def rts(n):
     return int(n/SKIP)*SKIP

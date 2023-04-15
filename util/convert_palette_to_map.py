@@ -13,7 +13,7 @@ SCALE_FACTOR_SAT = 0.5
 SCALE_FACTOR_VAL = 0.5
 
 CHECK_RATE = 1 # In seconds
-SKIP = 1
+SKIP = 5
 TOTAL_CALCS = int(256/SKIP + 1)**3
 
 def lerp(a, b, f):
