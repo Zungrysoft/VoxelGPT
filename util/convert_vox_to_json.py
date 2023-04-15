@@ -144,7 +144,7 @@ def write_vox_file(filename, size_x, size_y, size_z, voxels, palette):
         write_int(file, len(voxels))
         for x, y, z, color_index in voxels:
             file.write(struct.pack('<BBBB', x, y, z, color_index))
-        
+
         # Prepare the palette (RGBA) chunk
         palette = palette[:256]  # Truncate the palette if it has more than 256 colors
         while len(palette) < 256:  # Fill the palette with default colors if it has less than 256 colors
@@ -159,7 +159,7 @@ def write_vox_file(filename, size_x, size_y, size_z, voxels, palette):
         write_int(file, 0)
         for r, g, b, a in palette:
             file.write(struct.pack('<BBBB', r, g, b, a))
- 
+
 def convert_json_to_vox(input_filename, output_filename):
     def get_color_index(color, palette):
         if len(color) < 4:
@@ -167,7 +167,7 @@ def convert_json_to_vox(input_filename, output_filename):
                 color[0],
                 color[1],
                 color[2],
-                255 
+                255
             )
         if color in palette:
             return palette.index(color) + 1
@@ -190,11 +190,13 @@ def convert_vox_to_json(input_filename, output_filename):
     size_x, size_y, size_z, voxels, palette = read_vox_file(input_filename)
     data = {
         'size': {'x': size_x, 'y': size_y, 'z': size_z},
-        'voxels': [{'x': x, 'y': y, 'z': z, 'color': palette[color_index - 1]} for x, y, z, color_index in voxels]
+        'voxels': {}
     }
+    for x, y, z, color_index in voxels:
+        data["voxels"][f"{x},{y},{z}"] = palette[color_index - 1][:3]
 
     with open(output_filename, 'w') as output_file:
-        json.dump(output_file, indent=2)
+        json.dump(data, output_file, indent=2)
 
 if __name__ == '__main__':
     import sys
