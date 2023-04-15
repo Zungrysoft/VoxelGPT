@@ -186,13 +186,15 @@ def convert_json_to_vox(input_filename, output_filename):
 
     write_vox_file(output_filename, size_x, size_y, size_z, voxels, palette)
 
-def convert_vox_to_json(input_filename):
+def convert_vox_to_json(input_filename, output_filename):
     size_x, size_y, size_z, voxels, palette = read_vox_file(input_filename)
     data = {
         'size': {'x': size_x, 'y': size_y, 'z': size_z},
         'voxels': [{'x': x, 'y': y, 'z': z, 'color': palette[color_index - 1]} for x, y, z, color_index in voxels]
     }
-    return json.dumps(data, indent=2)
+
+    with open(output_filename, 'w') as output_file:
+        json.dump(output_file, indent=2)
 
 if __name__ == '__main__':
     import sys
@@ -204,9 +206,7 @@ if __name__ == '__main__':
     mode, input_filename, output_filename = sys.argv[1], sys.argv[2], sys.argv[3]
 
     if mode == 'to_json':
-        json_data = convert_vox_to_json(input_filename)
-        with open(output_filename, 'w') as output_file:
-            output_file.write(json_data)
+        convert_vox_to_json(input_filename, output_filename)
     elif mode == 'to_vox':
         convert_json_to_vox(input_filename, output_filename)
     else:
