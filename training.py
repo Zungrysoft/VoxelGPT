@@ -11,11 +11,19 @@ UNDECIDED = 0
 def embed():
     pass
 
-def get(voxels, key):
+def get(voxels, key, all_decided=False):
+    # If the key is in tuple form, convert it
+    if type(key) is tuple:
+        key = ttos(key)
+    
     if key in voxels:
+        # Return the value of the voxel coords
         return voxels[key]
     else:
-        return AIR
+        # If it's not in the voxels dictionary, return UNDECIDED
+        # all_decided mode makes this return AIR instead, since training example
+        # models should act as if every voxel is decided
+        return AIR if all_decided else UNDECIDED
 
 def stot(s):
     try:
@@ -42,7 +50,7 @@ def get_voxel_score(pos, context):
     return total
 
 # Decide the coordinates of the next voxel to pick
-def pick_next_voxel(voxels, context):
+def pick_next_voxel(built_voxels, context):
     cur_pos = context[-1][0]
     best_score = 0
     best_voxel = cur_pos
@@ -52,10 +60,12 @@ def pick_next_voxel(voxels, context):
         for y in range(-2, 3):
             for z in range(-2, 3):
                 voxel = (x, y, z)
-                score = get_voxel_score(voxel, context)
-                if score > best_score:
-                    best_score = score
-                    best_voxel = voxel
+                # Make sure this voxel hasn't already been built
+                if get(built_voxels, voxel) == UNDECIDED:
+                    score = get_voxel_score(voxel, context)
+                    if score > best_score:
+                        best_score = score
+                        best_voxel = voxel
     
     # Check some random voxels farther away
     CHECK_COUNT = 15
@@ -66,10 +76,12 @@ def pick_next_voxel(voxels, context):
         z = int((random.random() - 0.5) * CHECK_RADIUS * 2)
 
         voxel = (x, y, z)
-        score = get_voxel_score(voxel, context)
-        if score > best_score:
-            best_score = score
-            best_voxel = voxel
+        # Make sure this voxel hasn't already been built
+        if get(built_voxels, voxel) == UNDECIDED:
+            score = get_voxel_score(voxel, context)
+            if score > best_score:
+                best_score = score
+                best_voxel = voxel
     
     return best_voxel
 
@@ -82,7 +94,7 @@ def generate_examples(voxels, context_size):
 
     # Set up dict for voxels that have already been built
     built_voxels = {}
-    built_voxels[starter_voxel] = voxels[starter_voxel]
+    built_voxels[starter_voxel] = get(voxels, starter_voxel, True)
 
     # Build context list
     context = []
@@ -96,7 +108,7 @@ def generate_examples(voxels, context_size):
 
         # Add it to built voxels map
         nvs = ttos(next_voxel)
-        built_voxels[nvs] = get(voxels, nvs)
+        built_voxels[nvs] = get(voxels, nvs, True)
 
         # Add it to context window
         context.append((next_voxel, voxels[starter_voxel]))
@@ -104,7 +116,6 @@ def generate_examples(voxels, context_size):
             context.pop(0)
 
     ret.append(context)
-
     return ret
 
 # Generate n training examples, sampled from all of the json files in the training data
@@ -135,6 +146,3 @@ def generate_training_examples(num_examples, context_size):
                 examples += generate_examples(voxels, context_size)
     
     return examples
-
-
-print(generate_training_examples(20, 20))
