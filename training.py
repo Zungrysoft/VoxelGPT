@@ -2,20 +2,15 @@ import os
 import json
 import random
 import math
-import copy
 
 AIR = 1
 UNDECIDED = 0
-
-# Convert voxel color into an embedding
-def embed():
-    pass
 
 def get(voxels, key, all_decided=False):
     # If the key is in tuple form, convert it
     if type(key) is tuple:
         key = ttos(key)
-    
+
     if key in voxels:
         # Return the value of the voxel coords
         return voxels[key]
@@ -43,18 +38,20 @@ def dist(a, b):
     return math.sqrt((a[0]-b[0])**2 + (a[1]-b[1])**2 + (a[2]-b[2])**2)
 
 # Given a voxel and context, determine how much context this voxel will have and score it accordingly
+# This method wants to be as close as possible to nearby voxels
+# It also adds a random amount of variance to the resulting score, so different voxel pick orders will happen.
 def get_voxel_score(pos, context):
     total = 0
     for c in context:
         total += 1/(dist(pos, c[0]) + 0.01)
-    return total
+    return total * (random.random() + 1)
 
 # Decide the coordinates of the next voxel to pick
 def pick_next_voxel(built_voxels, context):
     cur_pos = context[-1][0]
     best_score = 0
     best_voxel = cur_pos
-    
+
     # Check all voxels within 2 spaces
     for x in range(-2, 3):
         for y in range(-2, 3):
@@ -66,7 +63,7 @@ def pick_next_voxel(built_voxels, context):
                     if score > best_score:
                         best_score = score
                         best_voxel = voxel
-    
+
     # Check some random voxels farther away
     CHECK_COUNT = 15
     CHECK_RADIUS = 10
@@ -82,7 +79,7 @@ def pick_next_voxel(built_voxels, context):
             if score > best_score:
                 best_score = score
                 best_voxel = voxel
-    
+
     return best_voxel
 
 # Generate one training example
@@ -112,8 +109,8 @@ def generate_examples(voxels, context_size):
 
         # Add it to context window
         context.append((next_voxel, voxels[starter_voxel]))
-        if len(context) > context_size:
-            context.pop(0)
+        # if len(context) > context_size+1:
+        #     context.pop(0)
 
     ret.append(context)
     return ret
@@ -144,5 +141,5 @@ def generate_training_examples(num_examples, context_size):
             # Generate training examples
             for _ in range(num_examples):
                 examples += generate_examples(voxels, context_size)
-    
+
     return examples
