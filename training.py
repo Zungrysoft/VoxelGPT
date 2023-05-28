@@ -2,9 +2,64 @@ import os
 import json
 import random
 import math
+import numpy as np
 
 AIR = 1
 UNDECIDED = 0
+
+def encode(pos, dim, size):
+    w = pos/(10000**((2*dim)/size))
+    if dim % 2 == 0:
+        w = math.sin(w)
+    else:
+        w = math.cos(w)
+    return w
+
+# Define embedding function
+def embed(position, index, palette, embedding_size):
+    # Get rgb value
+    if index <= 1:
+        rgb = (-10, -10, -10)
+    else:
+        rgb = palette[index]
+        rgb[0] /= 255
+        rgb[1] /= 255
+        rgb[2] /= 255
+
+    # Spread rgb across the embedding size (r, g, b, r, g, b, r, g, b, etc.)
+    scale = int((embedding_size+2)/3)
+    embedding = list(rgb) * scale
+
+    # Cut off the remainder
+    while len(embedding) > embedding_size:
+        embedding.pop()
+
+    # Add positional encoding
+    dimension_length = int(embedding_size / 3)
+    for i in range(dimension_length):
+        # X
+        embedding[i] += encode(position[0], i, dimension_length)
+        # Y
+        embedding[i + dimension_length] += encode(position[1], i, dimension_length)
+        # Z
+        embedding[i + dimension_length*2] += encode(position[2], i, dimension_length)
+
+    # Return
+    return embedding
+
+# Encode a palette index into a one-hot-encoded output vector
+def encode_one_hot(index, length):
+    # Change UNDECIDED into AIR
+    if index < 1:
+        index = 1
+
+    # Create the zeros vector
+    ret = np.zeros((length-1,))
+
+    # Add the one at the right index
+    # We remove the zero index because the sculptures should never output UNDECIDED
+    ret[index-1] = 1.0
+    return ret
 
 def get(voxels, key, all_decided=False):
     # If the key is in tuple form, convert it
