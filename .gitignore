@@ -1,5 +1,7 @@
 *.png~
+*.pyc
 __pycache__/*
+util/__pycache__/*
 training/view_vox/*
 examples/view_vox/*
 examples/json/*

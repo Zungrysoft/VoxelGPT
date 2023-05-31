@@ -61,6 +61,13 @@ def encode_one_hot(index, length):
     ret[index-1] = 1.0
     return ret
 
+def add(v1, v2):
+    return (
+        v1[0] + v2[0],
+        v1[1] + v2[1],
+        v1[2] + v2[2],
+    )
+
 def get(voxels, key, all_decided=False):
     # If the key is in tuple form, convert it
     if type(key) is tuple:
@@ -111,7 +118,7 @@ def pick_next_voxel(built_voxels, context):
     for x in range(-2, 3):
         for y in range(-2, 3):
             for z in range(-2, 3):
-                voxel = (x, y, z)
+                voxel = add((x, y, z), cur_pos)
                 # Make sure this voxel hasn't already been built
                 if get(built_voxels, voxel) == UNDECIDED:
                     score = get_voxel_score(voxel, context)
@@ -127,7 +134,7 @@ def pick_next_voxel(built_voxels, context):
         y = int((random.random() - 0.5) * CHECK_RADIUS * 2)
         z = int((random.random() - 0.5) * CHECK_RADIUS * 2)
 
-        voxel = (x, y, z)
+        voxel = add((x, y, z), cur_pos)
         # Make sure this voxel hasn't already been built
         if get(built_voxels, voxel) == UNDECIDED:
             score = get_voxel_score(voxel, context)

@@ -160,7 +160,8 @@ def write_vox_file(filename, size_x, size_y, size_z, voxels, palette):
         write_int(file, 0)
         write_int(file, len(voxels))
         for x, y, z, color_index in voxels:
-            file.write(struct.pack('<BBBB', x, y, z, color_index))
+            if all(ele >= 0 and ele < 128 for ele in [x, y, z]):
+                file.write(struct.pack('<BBBB', x, y, z, color_index))
 
         # Prepare the palette (RGBA) chunk
         palette = palette[:256]  # Truncate the palette if it has more than 256 colors
