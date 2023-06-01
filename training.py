@@ -104,15 +104,16 @@ def dist(a, b):
 # It also adds a random amount of variance to the resulting score, so different voxel pick orders will happen.
 def get_voxel_score(pos, context):
     total = 0
-    for c in context:
-        total += 1/(dist(pos, c[0]) + 0.01)
+    for voxel in context:
+        total += 1/(dist(pos, voxel[0]) + 0.01)
+    total += len(context)/(dist(pos, (63, 63, 63)) + 0.01)
     return total * (random.random() + 1)
 
 # Decide the coordinates of the next voxel to pick
 def pick_next_voxel(built_voxels, context):
     cur_pos = context[-1][0]
     best_score = 0
-    best_voxel = cur_pos
+    best_voxel = None
 
     # Check all voxels within 2 spaces
     for x in range(-2, 3):
@@ -127,12 +128,12 @@ def pick_next_voxel(built_voxels, context):
                         best_voxel = voxel
 
     # Check some random voxels farther away
-    CHECK_COUNT = 15
-    CHECK_RADIUS = 10
-    for i in range(CHECK_COUNT):
-        x = int((random.random() - 0.5) * CHECK_RADIUS * 2)
-        y = int((random.random() - 0.5) * CHECK_RADIUS * 2)
-        z = int((random.random() - 0.5) * CHECK_RADIUS * 2)
+    check_count = 15
+    check_radius = 5
+    while check_count > 0 or best_voxel == None:
+        x = int((random.random() - 0.5) * check_radius * 2)
+        y = int((random.random() - 0.5) * check_radius * 2)
+        z = int((random.random() - 0.5) * check_radius * 2)
 
         voxel = add((x, y, z), cur_pos)
         # Make sure this voxel hasn't already been built
@@ -142,14 +143,16 @@ def pick_next_voxel(built_voxels, context):
                 best_score = score
                 best_voxel = voxel
 
+        check_count -= 1
+        check_radius += 0.5
+
     return best_voxel
 
 # Generate one training example
 def generate_examples(voxels, context_size):
     # Pick starter voxel at random
     keys = list(voxels.keys())
-    i = int(random.random()*len(keys))
-    starter_voxel = keys[i]
+    starter_voxel = keys[int(random.random()*len(keys))]
 
     # Set up dict for voxels that have already been built
     built_voxels = {}
@@ -166,11 +169,11 @@ def generate_examples(voxels, context_size):
         next_voxel = pick_next_voxel(built_voxels, context)
 
         # Add it to built voxels map
-        nvs = ttos(next_voxel)
-        built_voxels[nvs] = get(voxels, nvs, True)
+        index_at_position = get(voxels, next_voxel, True)
+        built_voxels[ttos(next_voxel)] = index_at_position
 
         # Add it to context window
-        context.append((next_voxel, voxels[starter_voxel]))
+        context.append((next_voxel, index_at_position))
         # if len(context) > context_size+1:
         #     context.pop(0)
 
@@ -181,6 +184,7 @@ def generate_examples(voxels, context_size):
 def generate_training_examples(num_examples, context_size):
     # Get filenames of all voxel files in training corpus
     filenames = os.listdir('training/json')
+    filenames = list(filter(lambda f : "chr" in f, filenames))
 
     # Determine how many examples we should generate from each file
     examples_each = int(num_examples / len(filenames))

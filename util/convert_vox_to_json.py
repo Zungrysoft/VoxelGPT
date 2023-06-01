@@ -155,13 +155,13 @@ def write_vox_file(filename, size_x, size_y, size_z, voxels, palette):
         write_int(file, size_y)
         write_int(file, size_z)
 
+
         file.write(b'XYZI')
         write_int(file, 4 + len(voxels) * 4)
         write_int(file, 0)
         write_int(file, len(voxels))
         for x, y, z, color_index in voxels:
-            if all(ele >= 0 and ele < 128 for ele in [x, y, z]):
-                file.write(struct.pack('<BBBB', x, y, z, color_index))
+            file.write(struct.pack('<BBBB', x, y, z, color_index))
 
         # Prepare the palette (RGBA) chunk
         palette = palette[:256]  # Truncate the palette if it has more than 256 colors
@@ -207,16 +207,18 @@ def convert_json_to_vox(input_filename, output_filename):
         pos = (int(pos[0]), int(pos[1]), int(pos[2]))
         # print(index_to_rgb(color_index))
         ind = get_color_index(tuple(index_to_rgb(color_index)), palette)
-        voxels.append(
-            (
-                pos[0],
-                pos[1],
-                pos[2],
-                ind,
-            )
-        )
 
-    # voxels2 = [(voxel['x'], voxel['y'], voxel['z'], get_color_index(tuple(voxel['color']), palette)) for voxel in data['voxels']]
+        # Make sure this voxel is in bounds and a valid color
+        if all(ele >= 0 and ele < 128 for ele in pos):
+            if color_index >= 2 and color_index < 256:
+                voxels.append(
+                    (
+                        pos[0],
+                        pos[1],
+                        pos[2],
+                        ind,
+                    )
+                )
 
     write_vox_file(output_filename, size_x, size_y, size_z, voxels, palette)
 
