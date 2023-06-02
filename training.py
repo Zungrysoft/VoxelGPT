@@ -16,33 +16,26 @@ def encode(pos, dim, size):
     return w
 
 # Define embedding function
-def embed(position, index, palette, embedding_size):
+def embed(index, position, color_index, palette, embedding_size):
     # Get rgb value
-    if index <= 1:
-        rgb = (-10, -10, -10)
+    if color_index <= 1:
+        embedding = [-10, 0, 10]
     else:
-        rgb = palette[index]
-        rgb[0] /= 255
-        rgb[1] /= 255
-        rgb[2] /= 255
-
-    # Spread rgb across the embedding size (r, g, b, r, g, b, r, g, b, etc.)
-    scale = int((embedding_size+2)/3)
-    embedding = list(rgb) * scale
-
-    # Cut off the remainder
-    while len(embedding) > embedding_size:
-        embedding.pop()
+        embedding = list(palette[color_index])
+        embedding[0] /= 255
+        embedding[1] /= 255
+        embedding[2] /= 255
 
     # Add positional encoding
-    dimension_length = int(embedding_size / 3)
-    for i in range(dimension_length):
-        # X
-        embedding[i] += encode(position[0], i, dimension_length)
-        # Y
-        embedding[i + dimension_length] += encode(position[1], i, dimension_length)
-        # Z
-        embedding[i + dimension_length*2] += encode(position[2], i, dimension_length)
+    dimension_length = int((embedding_size-3) / 4)
+    for coord in position:
+        for i in range(dimension_length):
+            embedding.append(encode(coord, i, dimension_length))
+
+    # Add index-positional encoding for the remaineder of the embedding-size
+    index_dimension_length = embedding_size - len(embedding)
+    for i in range(index_dimension_length):
+        embedding.append(encode(index, i, index_dimension_length))
 
     # Return
     return embedding
