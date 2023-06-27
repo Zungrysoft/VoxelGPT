@@ -103,7 +103,7 @@ def get_voxel_score(pos, context):
     return total * (random.random() + 1)
 
 # Decide the coordinates of the next voxel to pick
-def pick_next_voxel(built_voxels, context):
+def pick_next_voxel_old(built_voxels, context):
     cur_pos = context[-1][0]
     best_score = 0
     best_voxel = None
@@ -141,11 +141,35 @@ def pick_next_voxel(built_voxels, context):
 
     return best_voxel
 
+SIZE = (5, 5, 5)
+
+# Decide the coordinates of the next voxel to pick
+def pick_next_voxel(built_voxels, context):
+    x, y, z = context[-1][0]
+
+    # X axis
+    x += 1
+    if x >= SIZE[0]:
+        x = 0
+
+        # Y axis
+        y += 1
+        if y >= SIZE[1]:
+            y = 0
+
+            # Z axis
+            z += 1
+    
+    return (x, y, z)
+
+
+
 # Generate one training example
 def generate_examples(voxels, context_size):
     # Pick starter voxel at random
-    keys = list(voxels.keys())
-    starter_voxel = keys[int(random.random()*len(keys))]
+    # keys = list(voxels.keys())
+    # starter_voxel = keys[int(random.random()*len(keys))]
+    starter_voxel = (0, 0, 0)
 
     # Set up dict for voxels that have already been built
     built_voxels = {}
@@ -153,7 +177,7 @@ def generate_examples(voxels, context_size):
 
     # Build context list
     context = []
-    context.append((stot(starter_voxel), voxels[starter_voxel]))
+    context.append((stot(starter_voxel), get(voxels, starter_voxel, True)))
 
     # Generate examples
     ret = []
@@ -177,7 +201,7 @@ def generate_examples(voxels, context_size):
 def generate_training_examples(num_examples, context_size):
     # Get filenames of all voxel files in training corpus
     filenames = os.listdir('training/json')
-    filenames = list(filter(lambda f : "chr" in f, filenames))
+    filenames = list(filter(lambda f : "sorbub" in f, filenames))
 
     # Determine how many examples we should generate from each file
     examples_each = int(num_examples / len(filenames))
