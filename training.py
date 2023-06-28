@@ -7,9 +7,9 @@ import numpy as np
 AIR = 1
 UNDECIDED = 0
 
-def encode(pos, dim, size):
-    w = pos/(10000**((2*dim)/size))
-    if dim % 2 == 0:
+def encode(pos, i, size):
+    w = pos/(10000**((2*i)/size))
+    if i % 2 == 0:
         w = math.sin(w)
     else:
         w = math.cos(w)
@@ -19,26 +19,33 @@ def encode(pos, dim, size):
 def embed(index, position, color_index, palette, embedding_size):
     # Get rgb value
     if color_index <= 1:
-        embedding = [-10, 0, 10]
+        embedding = [0.0, 0.0, 0.0, 0.0]
     else:
         embedding = list(palette[color_index])
         embedding[0] /= 255
         embedding[1] /= 255
         embedding[2] /= 255
+        embedding.append(1.0)
 
-    # Add positional encoding
-    dimension_length = int((embedding_size-3) / 4)
-    for coord in position:
-        for i in range(dimension_length):
-            embedding.append(encode(coord, i, dimension_length))
+    # p = position[0] + position[1]*5 + position[2]*25
+    for i in range(embedding_size-4):
+        embedding.append(encode(index, i, embedding_size-4))
 
-    # Add index-positional encoding for the remaineder of the embedding-size
-    index_dimension_length = embedding_size - len(embedding)
-    for i in range(index_dimension_length):
-        embedding.append(encode(index, i, index_dimension_length))
-
-    # Return
     return embedding
+
+    # # Add positional encoding
+    # dimension_length = int((embedding_size-3) / 4)
+    # for coord in position:
+    #     for i in range(dimension_length):
+    #         embedding.append(encode(coord, i, dimension_length))
+
+    # # Add index-positional encoding for the remaineder of the embedding-size
+    # index_dimension_length = embedding_size - len(embedding)
+    # for i in range(index_dimension_length):
+    #     embedding.append(encode(index, i, index_dimension_length))
+
+    # # Return
+    # return embedding
 
 # Encode a palette index into a one-hot-encoded output vector
 def encode_one_hot(index, length):
@@ -159,7 +166,7 @@ def pick_next_voxel(built_voxels, context):
 
             # Z axis
             z += 1
-    
+
     return (x, y, z)
 
 
@@ -169,7 +176,7 @@ def generate_examples(voxels, context_size):
     # Pick starter voxel at random
     # keys = list(voxels.keys())
     # starter_voxel = keys[int(random.random()*len(keys))]
-    starter_voxel = (0, 0, 0)
+    starter_voxel = (int(random.random()*SIZE[0]), int(random.random()*SIZE[1]), int(random.random()*SIZE[2]-1))
 
     # Set up dict for voxels that have already been built
     built_voxels = {}
@@ -201,7 +208,7 @@ def generate_examples(voxels, context_size):
 def generate_training_examples(num_examples, context_size):
     # Get filenames of all voxel files in training corpus
     filenames = os.listdir('training/json')
-    filenames = list(filter(lambda f : "sorbub" in f, filenames))
+    filenames = list(filter(lambda f : "sorjek" in f, filenames))
 
     # Determine how many examples we should generate from each file
     examples_each = int(num_examples / len(filenames))
