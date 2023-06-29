@@ -8,30 +8,33 @@ AIR = 1
 UNDECIDED = 0
 
 def encode(pos, i, size):
-    w = pos/(10000**((2*i)/size))
     if i % 2 == 0:
-        w = math.sin(w)
+        return math.sin(pos/(10000**((2*i)/size)))
     else:
-        w = math.cos(w)
-    return w
+        return math.cos(pos/(10000**((2*(i-1))/size)))
 
 # Define embedding function
 def embed(index, position, color_index, palette, embedding_size):
     # Get rgb value
     if color_index <= 1:
-        embedding = [0.0, 0.0, 0.0, 0.0]
+        embedding = [0.0, 0.0, 0.0, 1.0]
     else:
         embedding = list(palette[color_index])
         embedding[0] /= 255
         embedding[1] /= 255
         embedding[2] /= 255
-        embedding.append(1.0)
+        embedding.append(0.0)
 
-    # p = position[0] + position[1]*5 + position[2]*25
     for i in range(embedding_size-4):
         embedding.append(encode(index, i, embedding_size-4))
 
-    return embedding
+    # repeat = math.ceil(embedding_size/4)
+    # embedding = (embedding * repeat)[0 : embedding_size]
+
+    # for i in range(embedding_size):
+    #     embedding[i] += encode(index, i, embedding_size-4)
+
+    # return embedding
 
     # # Add positional encoding
     # dimension_length = int((embedding_size-3) / 4)
@@ -44,8 +47,8 @@ def embed(index, position, color_index, palette, embedding_size):
     # for i in range(index_dimension_length):
     #     embedding.append(encode(index, i, index_dimension_length))
 
-    # # Return
-    # return embedding
+    # Return
+    return embedding
 
 # Encode a palette index into a one-hot-encoded output vector
 def encode_one_hot(index, length):
@@ -175,16 +178,16 @@ def pick_next_voxel(built_voxels, context):
 def generate_examples(voxels, context_size):
     # Pick starter voxel at random
     # keys = list(voxels.keys())
-    # starter_voxel = keys[int(random.random()*len(keys))]
+    # starter_voxel = stot(keys[int(random.random()*len(keys))])
     starter_voxel = (int(random.random()*SIZE[0]), int(random.random()*SIZE[1]), int(random.random()*SIZE[2]-1))
 
     # Set up dict for voxels that have already been built
     built_voxels = {}
-    built_voxels[starter_voxel] = get(voxels, starter_voxel, True)
+    built_voxels[ttos(starter_voxel)] = get(voxels, starter_voxel, True)
 
     # Build context list
     context = []
-    context.append((stot(starter_voxel), get(voxels, starter_voxel, True)))
+    context.append((starter_voxel, get(voxels, starter_voxel, True)))
 
     # Generate examples
     ret = []
