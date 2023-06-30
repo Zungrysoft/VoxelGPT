@@ -25,8 +25,8 @@ def embed(index, position, color_index, palette, embedding_size):
         embedding[2] /= 255
         embedding.append(0.0)
 
-    for i in range(embedding_size-4):
-        embedding.append(encode(index, i, embedding_size-4))
+    # for i in range(embedding_size-4):
+    #     embedding.append(encode(index, i, embedding_size-4))
 
     # repeat = math.ceil(embedding_size/4)
     # embedding = (embedding * repeat)[0 : embedding_size]
@@ -36,16 +36,16 @@ def embed(index, position, color_index, palette, embedding_size):
 
     # return embedding
 
-    # # Add positional encoding
-    # dimension_length = int((embedding_size-3) / 4)
-    # for coord in position:
-    #     for i in range(dimension_length):
-    #         embedding.append(encode(coord, i, dimension_length))
+    # Add positional encoding
+    dimension_length = int((embedding_size-4) / 4)
+    for coord in position:
+        for i in range(dimension_length):
+            embedding.append(encode(coord, i, dimension_length))
 
-    # # Add index-positional encoding for the remaineder of the embedding-size
-    # index_dimension_length = embedding_size - len(embedding)
-    # for i in range(index_dimension_length):
-    #     embedding.append(encode(index, i, index_dimension_length))
+    # Add index-positional encoding for the remaineder of the embedding-size
+    index_dimension_length = embedding_size - len(embedding)
+    for i in range(index_dimension_length):
+        embedding.append(encode(index, i, index_dimension_length))
 
     # Return
     return embedding
