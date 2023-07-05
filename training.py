@@ -14,15 +14,32 @@ def encode(pos, i, size):
         return math.cos(pos/(10000**((2*(i-1))/size)))
 
 # Define embedding function
+COLOR_EMBEDDING_LENGTH = 9
+# red, green, blue, hue, saturation (hsv), value, saturation (hsl), lightness, transparent
 def embed(index, position, color_index, palette, embedding_size):
     # Get rgb value
     if color_index <= 1:
-        embedding = [0.0, 0.0, 0.0, 1.0]
+        embedding = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
     else:
-        embedding = list(palette[color_index])
-        embedding[0] /= 255
-        embedding[1] /= 255
-        embedding[2] /= 255
+        # Set up values
+        color = palette[color_index]
+        embedding = []
+
+        # rgb
+        embedding.append(color["rgb"][0])
+        embedding.append(color["rgb"][1])
+        embedding.append(color["rgb"][2])
+
+        # hsv
+        embedding.append(color["hsv"][0])
+        embedding.append(color["hsv"][1])
+        embedding.append(color["hsv"][2])
+
+        # hsl
+        embedding.append(color["hsl"][1])
+        embedding.append(color["hsl"][2])
+
+        # not transparent
         embedding.append(0.0)
 
     # for i in range(embedding_size-4):
@@ -37,7 +54,7 @@ def embed(index, position, color_index, palette, embedding_size):
     # return embedding
 
     # Add positional encoding
-    dimension_length = int((embedding_size-4) / 4)
+    dimension_length = int((embedding_size - COLOR_EMBEDDING_LENGTH) / 4)
     for coord in position:
         for i in range(dimension_length):
             embedding.append(encode(coord, i, dimension_length))
@@ -113,7 +130,7 @@ def get_voxel_score(pos, context):
     return total * (random.random() + 1)
 
 # Decide the coordinates of the next voxel to pick
-def pick_next_voxel_old(built_voxels, context):
+def pick_next_voxel(built_voxels, context):
     cur_pos = context[-1][0]
     best_score = 0
     best_voxel = None
@@ -151,10 +168,10 @@ def pick_next_voxel_old(built_voxels, context):
 
     return best_voxel
 
-SIZE = (5, 5, 5)
+SIZE = (20, 21, 20)
 
 # Decide the coordinates of the next voxel to pick
-def pick_next_voxel(built_voxels, context):
+def pick_next_voxel_old(built_voxels, context):
     x, y, z = context[-1][0]
 
     # X axis
@@ -177,9 +194,9 @@ def pick_next_voxel(built_voxels, context):
 # Generate one training example
 def generate_examples(voxels, context_size):
     # Pick starter voxel at random
-    # keys = list(voxels.keys())
-    # starter_voxel = stot(keys[int(random.random()*len(keys))])
-    starter_voxel = (int(random.random()*SIZE[0]), int(random.random()*SIZE[1]), int(random.random()*SIZE[2]-1))
+    keys = list(voxels.keys())
+    starter_voxel = stot(keys[int(random.random()*len(keys))])
+    # starter_voxel = (int(random.random()*SIZE[0]), int(random.random()*SIZE[1]), int(random.random()*SIZE[2]-1))
 
     # Set up dict for voxels that have already been built
     built_voxels = {}
@@ -211,7 +228,7 @@ def generate_examples(voxels, context_size):
 def generate_training_examples(num_examples, context_size):
     # Get filenames of all voxel files in training corpus
     filenames = os.listdir('training/json')
-    filenames = list(filter(lambda f : "sorbub" in f, filenames))
+    filenames = list(filter(lambda f : "chr" in f, filenames))
 
     # Determine how many examples we should generate from each file
     examples_each = int(num_examples / len(filenames))
