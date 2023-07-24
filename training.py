@@ -54,10 +54,10 @@ def embed(index, position, color_index, palette, embedding_size):
     # return embedding
 
     # Add positional encoding
-    dimension_length = int((embedding_size - COLOR_EMBEDDING_LENGTH) / 3)
-    for coord in position:
-        for i in range(dimension_length):
-            embedding.append(encode(coord, i, dimension_length))
+    # dimension_length = int((embedding_size - COLOR_EMBEDDING_LENGTH) / 3)
+    # for coord in position:
+    #     for i in range(dimension_length):
+    #         embedding.append(encode(coord, i, dimension_length))
 
     # Add index-positional encoding for the remainder of the embedding-size
     # index_dimension_length = embedding_size - len(embedding)
@@ -65,9 +65,12 @@ def embed(index, position, color_index, palette, embedding_size):
     #     embedding.append(encode(index, i, index_dimension_length))
 
     # Pad encoding for last value
-    padding = embedding_size - len(embedding)
-    for i in range(padding):
-        embedding.append(0)
+    # padding = embedding_size - len(embedding)
+    # for i in range(padding):
+    #     embedding.append(0)
+
+    for i in range(embedding_size-COLOR_EMBEDDING_LENGTH):
+        embedding.append(encode(index, i, embedding_size-COLOR_EMBEDDING_LENGTH))
 
     # Return
     return embedding
@@ -234,7 +237,7 @@ def generate_examples(voxels, context_size):
 def generate_training_examples(num_examples, context_size):
     # Get filenames of all voxel files in training corpus
     filenames = os.listdir('training/json')
-    filenames = list(filter(lambda f : "sorbub" in f, filenames))
+    filenames = list(filter(lambda f : "sorjek" in f, filenames))
 
     # Determine how many examples we should generate from each file
     examples_each = int(num_examples / len(filenames))
