@@ -7,6 +7,8 @@ import numpy as np
 AIR = 1
 UNDECIDED = 0
 
+SIZE = (20, 21, 20)
+
 def encode(pos, i, size):
     if i % 2 == 0:
         return math.sin(pos/(10000**((2*i)/size)))
@@ -42,17 +44,6 @@ def embed(index, position, color_index, palette, embedding_size):
         # not transparent
         embedding.append(0.0)
 
-    # for i in range(embedding_size-4):
-    #     embedding.append(encode(index, i, embedding_size-4))
-
-    # repeat = math.ceil(embedding_size/4)
-    # embedding = (embedding * repeat)[0 : embedding_size]
-
-    # for i in range(embedding_size):
-    #     embedding[i] += encode(index, i, embedding_size-4)
-
-    # return embedding
-
     # Add positional encoding
     dimension_length = int((embedding_size - COLOR_EMBEDDING_LENGTH) / 3)
     for coord in position:
@@ -80,6 +71,20 @@ def encode_one_hot(index, length):
     # We remove the zero index because the sculptures should never output UNDECIDED
     ret[index-1] = 1.0
     return ret
+
+def remove_farthest(context, pos):
+    # Find which context element is the farthest away
+    farthest_index = 0
+    farthest_dist = 0
+    for i in range(len(context)):
+        cur_dist = dist(context[i], pos)
+        if cur_dist > farthest_dist:
+            farthest_dist = cur_dist
+            farthest_index = i
+
+    # Delete that context element and return
+    del context[farthest_index]
+    return context
 
 def add(v1, v2):
     return (
@@ -130,7 +135,7 @@ def get_voxel_score(pos, context):
     return total * (random.random() + 1)
 
 # Decide the coordinates of the next voxel to pick
-def pick_next_voxel_old(built_voxels, context):
+def pick_next_voxel(built_voxels, context):
     cur_pos = context[-1][0]
     best_score = 0
     best_voxel = None
@@ -168,10 +173,8 @@ def pick_next_voxel_old(built_voxels, context):
 
     return best_voxel
 
-SIZE = (5, 5, 5)
-
 # Decide the coordinates of the next voxel to pick
-def pick_next_voxel(built_voxels, context):
+def pick_next_voxel_old(built_voxels, context):
     x, y, z = context[-1][0]
 
     # X axis
@@ -189,15 +192,14 @@ def pick_next_voxel(built_voxels, context):
 
     return (x, y, z)
 
-
-
 # Generate one training example
 def generate_examples(voxels, context_size):
     # Pick starter voxel at random
     keys = list(voxels.keys())
     # starter_voxel = (0, 0, 0)
+    starter_voxel = (9, 9, 9)
     # starter_voxel = stot(keys[int(random.random()*len(keys))])
-    starter_voxel = (int(random.random()*SIZE[0]), int(random.random()*SIZE[1]), int(random.random()*SIZE[2]-1))
+    # starter_voxel = (int(random.random()*SIZE[0]), int(random.random()*SIZE[1]), int(random.random()*SIZE[2]-1))
 
     # Set up dict for voxels that have already been built
     built_voxels = {}
@@ -229,7 +231,7 @@ def generate_examples(voxels, context_size):
 def generate_training_examples(num_examples, context_size):
     # Get filenames of all voxel files in training corpus
     filenames = os.listdir('training/json')
-    filenames = list(filter(lambda f : "sor" in f, filenames))
+    filenames = list(filter(lambda f : "chr" in f, filenames))
 
     # Determine how many examples we should generate from each file
     examples_each = int(num_examples / len(filenames))

@@ -10,7 +10,6 @@ def convert(input_file_name, output_file_name):
         # Load json data
         data = json.load(json_file)
         colors = data["colors"]
-        # colors = [[0, 0, 0], [0, 0, 0]] + colors
 
         # Figure out image dimensions
         num_colors = len(colors)
