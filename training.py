@@ -77,7 +77,7 @@ def remove_farthest(context, pos):
     farthest_index = 0
     farthest_dist = 0
     for i in range(len(context)):
-        cur_dist = dist(context[i], pos)
+        cur_dist = dist(context[i][0], pos)
         if cur_dist > farthest_dist:
             farthest_dist = cur_dist
             farthest_index = i
@@ -195,10 +195,10 @@ def pick_next_voxel_old(built_voxels, context):
 # Generate one training example
 def generate_examples(voxels, context_size):
     # Pick starter voxel at random
-    keys = list(voxels.keys())
     # starter_voxel = (0, 0, 0)
-    starter_voxel = (9, 9, 9)
-    # starter_voxel = stot(keys[int(random.random()*len(keys))])
+    # starter_voxel = (int(SIZE[0]/2), int(SIZE[1]/2), int(SIZE[2]/2))
+    keys = list(voxels.keys())
+    starter_voxel = stot(keys[int(random.random()*len(keys))])
     # starter_voxel = (int(random.random()*SIZE[0]), int(random.random()*SIZE[1]), int(random.random()*SIZE[2]-1))
 
     # Set up dict for voxels that have already been built
