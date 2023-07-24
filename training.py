@@ -54,15 +54,20 @@ def embed(index, position, color_index, palette, embedding_size):
     # return embedding
 
     # Add positional encoding
-    dimension_length = int((embedding_size - COLOR_EMBEDDING_LENGTH) / 4)
+    dimension_length = int((embedding_size - COLOR_EMBEDDING_LENGTH) / 3)
     for coord in position:
         for i in range(dimension_length):
             embedding.append(encode(coord, i, dimension_length))
 
-    # Add index-positional encoding for the remaineder of the embedding-size
-    index_dimension_length = embedding_size - len(embedding)
-    for i in range(index_dimension_length):
-        embedding.append(encode(index, i, index_dimension_length))
+    # Add index-positional encoding for the remainder of the embedding-size
+    # index_dimension_length = embedding_size - len(embedding)
+    # for i in range(index_dimension_length):
+    #     embedding.append(encode(index, i, index_dimension_length))
+
+    # Pad encoding for last value
+    padding = embedding_size - len(embedding)
+    for i in range(padding):
+        embedding.append(0)
 
     # Return
     return embedding
@@ -130,7 +135,7 @@ def get_voxel_score(pos, context):
     return total * (random.random() + 1)
 
 # Decide the coordinates of the next voxel to pick
-def pick_next_voxel(built_voxels, context):
+def pick_next_voxel_old(built_voxels, context):
     cur_pos = context[-1][0]
     best_score = 0
     best_voxel = None
@@ -168,10 +173,10 @@ def pick_next_voxel(built_voxels, context):
 
     return best_voxel
 
-SIZE = (20, 21, 20)
+SIZE = (5, 5, 5)
 
 # Decide the coordinates of the next voxel to pick
-def pick_next_voxel_old(built_voxels, context):
+def pick_next_voxel(built_voxels, context):
     x, y, z = context[-1][0]
 
     # X axis
@@ -195,7 +200,8 @@ def pick_next_voxel_old(built_voxels, context):
 def generate_examples(voxels, context_size):
     # Pick starter voxel at random
     keys = list(voxels.keys())
-    starter_voxel = stot(keys[int(random.random()*len(keys))])
+    starter_voxel = (0, 0, 0)
+    # starter_voxel = stot(keys[int(random.random()*len(keys))])
     # starter_voxel = (int(random.random()*SIZE[0]), int(random.random()*SIZE[1]), int(random.random()*SIZE[2]-1))
 
     # Set up dict for voxels that have already been built
@@ -228,7 +234,7 @@ def generate_examples(voxels, context_size):
 def generate_training_examples(num_examples, context_size):
     # Get filenames of all voxel files in training corpus
     filenames = os.listdir('training/json')
-    filenames = list(filter(lambda f : "chr" in f, filenames))
+    filenames = list(filter(lambda f : "sorbub" in f, filenames))
 
     # Determine how many examples we should generate from each file
     examples_each = int(num_examples / len(filenames))
