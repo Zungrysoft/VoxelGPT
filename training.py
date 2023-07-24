@@ -7,7 +7,7 @@ import numpy as np
 AIR = 1
 UNDECIDED = 0
 
-SIZE = (20, 21, 20)
+SIZE = (5, 5, 5)
 
 def encode(pos, i, size):
     if i % 2 == 0:
@@ -195,19 +195,19 @@ def pick_next_voxel_old(built_voxels, context):
 # Generate one training example
 def generate_examples(voxels, context_size):
     # Pick starter voxel at random
-    # starter_voxel = (0, 0, 0)
-    # starter_voxel = (int(SIZE[0]/2), int(SIZE[1]/2), int(SIZE[2]/2))
+    # start_pos = (0, 0, 0)
+    # start_pos = (int(SIZE[0]/2), int(SIZE[1]/2), int(SIZE[2]/2))
     keys = list(voxels.keys())
-    starter_voxel = stot(keys[int(random.random()*len(keys))])
-    # starter_voxel = (int(random.random()*SIZE[0]), int(random.random()*SIZE[1]), int(random.random()*SIZE[2]-1))
+    start_pos = stot(keys[int(random.random()*len(keys))])
+    # start_pos = (int(random.random()*SIZE[0]), int(random.random()*SIZE[1]), int(random.random()*SIZE[2]-1))
 
     # Set up dict for voxels that have already been built
     built_voxels = {}
-    built_voxels[ttos(starter_voxel)] = get(voxels, starter_voxel, True)
+    built_voxels[ttos(start_pos)] = get(voxels, start_pos, True)
 
     # Build context list
     context = []
-    context.append((starter_voxel, get(voxels, starter_voxel, True)))
+    context.append((start_pos, get(voxels, start_pos, True)))
 
     # Generate examples
     ret = []
@@ -231,7 +231,7 @@ def generate_examples(voxels, context_size):
 def generate_training_examples(num_examples, context_size):
     # Get filenames of all voxel files in training corpus
     filenames = os.listdir('training/json')
-    filenames = list(filter(lambda f : "chr" in f, filenames))
+    filenames = list(filter(lambda f : "sor" in f, filenames))
 
     # Determine how many examples we should generate from each file
     examples_each = int(num_examples / len(filenames))
