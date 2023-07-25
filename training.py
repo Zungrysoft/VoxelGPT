@@ -132,7 +132,8 @@ def get_voxel_score(pos, context):
     for voxel in context:
         total += 1/(dist(pos, voxel[0]) + 0.01)
     total += len(context)/(dist(pos, (63, 63, 63)) + 0.01)
-    return total * (random.random() + 1)
+    return total
+    # * (random.random() + 1)
 
 # Decide the coordinates of the next voxel to pick
 def pick_next_voxel(built_voxels, context):
@@ -155,7 +156,7 @@ def pick_next_voxel(built_voxels, context):
     # Check some random voxels farther away
     check_count = 15
     check_radius = 5
-    while check_count > 0 or best_voxel == None:
+    while check_count > 0 and best_voxel == None:
         x = int((random.random() - 0.5) * check_radius * 2)
         y = int((random.random() - 0.5) * check_radius * 2)
         z = int((random.random() - 0.5) * check_radius * 2)
