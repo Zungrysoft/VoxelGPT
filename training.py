@@ -16,12 +16,17 @@ def encode(pos, i, size):
         return math.cos(pos/(10000**((2*(i-1))/size)))
 
 # Define embedding function
-COLOR_EMBEDDING_LENGTH = 9
-# red, green, blue, hue, saturation (hsv), value, saturation (hsl), lightness, transparent
+COLOR_EMBEDDING_LENGTH = 10
+# red, green, blue, hue, saturation (hsv), value, saturation (hsl), lightness, transparent, next
 def embed(index, position, color_index, palette, embedding_size):
     # Get rgb value
-    if color_index <= 1:
-        embedding = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+    # Next voxel's positional encoding
+    if color_index == -1:
+        embedding = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+    # Air voxel
+    if color_index == 0 or color_index == 1:
+        embedding = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+    # Solid voxel
     else:
         # Set up values
         color = palette[color_index]
@@ -43,6 +48,9 @@ def embed(index, position, color_index, palette, embedding_size):
 
         # not transparent
         embedding.append(0.0)
+
+        # not the next voxel
+        embedding.append(1.0)
 
     # Add positional encoding
     dimension_length = int((embedding_size - COLOR_EMBEDDING_LENGTH) / 3)
@@ -126,15 +134,14 @@ def dist(a, b):
 
 # Given a voxel and context, determine how much context this voxel will have and score it accordingly
 # This method wants to be as close as possible to nearby voxels
-# It also adds a random amount of variance to the resulting score, so different voxel pick orders will happen.
+# It also adds a little bit of variance to the resulting score, so different voxel pick orders will happen.
 def get_voxel_score(pos, context):
     total = 0
     center_pos = (int(SIZE[0]/2), int(SIZE[1]/2), int(SIZE[2]/2))
     for voxel in context:
         total += 1/(dist(pos, voxel[0]) + 0.01)
     total += len(context)/(dist(pos, center_pos) + 0.01)
-    return total
-    # * (random.random() + 1)
+    return total * (random.random() + 1)
 
 # Decide the coordinates of the next voxel to pick
 def pick_next_voxel(built_voxels, context):
@@ -225,8 +232,8 @@ def generate_examples(voxels, context_size):
 
         # Add it to context window
         context.append((next_voxel, index_at_position))
-        # if len(context) > context_size+1:
-        #     context.pop(0)
+        if len(context) > context_size+1:
+            context = remove_farthest(context, next_voxel)
 
     ret.append(context)
     return ret
