@@ -7,6 +7,8 @@ import numpy as np
 AIR = 1
 UNDECIDED = 0
 
+SIZE = (8, 8, 8)
+
 def encode(pos, i, size):
     if i % 2 == 0:
         return math.sin(pos/(10000**((2*i)/size)))
@@ -168,8 +170,6 @@ def pick_next_voxel_old(built_voxels, context):
 
     return best_voxel
 
-SIZE = (5, 5, 5)
-
 # Decide the coordinates of the next voxel to pick
 def pick_next_voxel(built_voxels, context):
     x, y, z = context[-1][0]
@@ -229,7 +229,7 @@ def generate_examples(voxels, context_size):
 def generate_training_examples(num_examples, context_size):
     # Get filenames of all voxel files in training corpus
     filenames = os.listdir('training/json')
-    filenames = list(filter(lambda f : "sor" in f, filenames))
+    filenames = list(filter(lambda f : "sorpok" in f, filenames))
 
     # Determine how many examples we should generate from each file
     examples_each = int(num_examples / len(filenames))
