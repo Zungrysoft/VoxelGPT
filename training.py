@@ -156,7 +156,9 @@ def pick_next_voxel(built_voxels, context):
     # Check some random voxels farther away
     check_count = 15
     check_radius = 5
-    while check_count > 0 and best_voxel == None:
+    while best_voxel == None:
+        # check_count > 0 or
+
         x = int((random.random() - 0.5) * check_radius * 2)
         y = int((random.random() - 0.5) * check_radius * 2)
         z = int((random.random() - 0.5) * check_radius * 2)
