@@ -129,9 +129,10 @@ def dist(a, b):
 # It also adds a random amount of variance to the resulting score, so different voxel pick orders will happen.
 def get_voxel_score(pos, context):
     total = 0
+    center_pos = (int(SIZE[0]/2), int(SIZE[1]/2), int(SIZE[2]/2))
     for voxel in context:
         total += 1/(dist(pos, voxel[0]) + 0.01)
-    total += len(context)/(dist(pos, (63, 63, 63)) + 0.01)
+    total += len(context)/(dist(pos, center_pos) + 0.01)
     return total
     # * (random.random() + 1)
 
