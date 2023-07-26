@@ -24,7 +24,7 @@ def embed(index, position, color_index, palette, embedding_size):
     if color_index == -1:
         embedding = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
     # Air voxel
-    if color_index == 0 or color_index == 1:
+    elif color_index == 0 or color_index == 1:
         embedding = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0]
     # Solid voxel
     else:
