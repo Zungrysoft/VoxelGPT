@@ -7,7 +7,7 @@ import numpy as np
 AIR = 1
 UNDECIDED = 0
 
-SIZE = (8, 8, 8)
+SIZE = (20, 20, 20)
 
 def encode(pos, i, size):
     if i % 2 == 0:
