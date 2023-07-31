@@ -7,7 +7,7 @@ import numpy as np
 AIR = 1
 UNDECIDED = 0
 
-SIZE = (20, 20, 20)
+SIZE = (5, 5, 5)
 
 def encode(pos, i, size):
     if i % 2 == 0:
@@ -242,7 +242,7 @@ def generate_examples(voxels, context_size):
 def generate_training_examples(num_examples, context_size):
     # Get filenames of all voxel files in training corpus
     filenames = os.listdir('training/json')
-    filenames = list(filter(lambda f : "sorpok" in f, filenames))
+    filenames = list(filter(lambda f : "sorjek" in f, filenames))
 
     # Determine how many examples we should generate from each file
     examples_each = int(num_examples / len(filenames))
