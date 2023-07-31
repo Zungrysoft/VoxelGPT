@@ -2,6 +2,7 @@ import os
 import json
 import random
 import math
+import vector as vec
 import numpy as np
 
 AIR = 1
@@ -85,7 +86,7 @@ def remove_farthest(context, pos):
     farthest_index = 0
     farthest_dist = 0
     for i in range(len(context)):
-        cur_dist = dist(context[i][0], pos)
+        cur_dist = vec.dist(context[i][0], pos)
         if cur_dist > farthest_dist:
             farthest_dist = cur_dist
             farthest_index = i
@@ -94,17 +95,10 @@ def remove_farthest(context, pos):
     del context[farthest_index]
     return context
 
-def add(v1, v2):
-    return (
-        v1[0] + v2[0],
-        v1[1] + v2[1],
-        v1[2] + v2[2],
-    )
-
 def get(voxels, key, all_decided=False):
     # If the key is in tuple form, convert it
     if type(key) is tuple:
-        key = ttos(key)
+        key = vec.ttos(key)
 
     if key in voxels:
         # Return the value of the voxel coords
@@ -115,23 +109,6 @@ def get(voxels, key, all_decided=False):
         # models should act as if every voxel is decided
         return AIR if all_decided else UNDECIDED
 
-def stot(s):
-    try:
-        spl = s.split(',')
-        return (int(spl[0]), int(spl[1]), int(spl[2]))
-    except:
-        return (0, 0, 0)
-
-def ttos(t):
-    try:
-        return f'{int(t[0])},{int(t[1])},{int(t[2])}'
-    except:
-        return '0,0,0'
-
-# Gets the euclidean distance between two points
-def dist(a, b):
-    return math.sqrt((a[0]-b[0])**2 + (a[1]-b[1])**2 + (a[2]-b[2])**2)
-
 # Given a voxel and context, determine how much context this voxel will have and score it accordingly
 # This method wants to be as close as possible to nearby voxels
 # It also adds a little bit of variance to the resulting score, so different voxel pick orders will happen.
@@ -139,8 +116,8 @@ def get_voxel_score(pos, context):
     total = 0
     center_pos = (int(SIZE[0]/2), int(SIZE[1]/2), int(SIZE[2]/2))
     for voxel in context:
-        total += 1/(dist(pos, voxel[0]) + 0.01)
-    total += len(context)/(dist(pos, center_pos) + 0.01)
+        total += 1/(vec.dist(pos, voxel[0]) + 0.01)
+    total += len(context)/(vec.dist(pos, center_pos) + 0.01)
     return total * (random.random() + 1)
 
 # Decide the coordinates of the next voxel to pick
@@ -153,7 +130,7 @@ def pick_next_voxel(built_voxels, context):
     for x in range(-2, 3):
         for y in range(-2, 3):
             for z in range(-2, 3):
-                voxel = add((x, y, z), cur_pos)
+                voxel = vec.add((x, y, z), cur_pos)
                 # Make sure this voxel hasn't already been built
                 if get(built_voxels, voxel) == UNDECIDED:
                     score = get_voxel_score(voxel, context)
@@ -171,7 +148,7 @@ def pick_next_voxel(built_voxels, context):
         y = int((random.random() - 0.5) * check_radius * 2)
         z = int((random.random() - 0.5) * check_radius * 2)
 
-        voxel = add((x, y, z), cur_pos)
+        voxel = vec.add((x, y, z), cur_pos)
         # Make sure this voxel hasn't already been built
         if get(built_voxels, voxel) == UNDECIDED:
             score = get_voxel_score(voxel, context)
@@ -209,12 +186,12 @@ def generate_examples(voxels, context_size):
     # start_pos = (0, 0, 0)
     # start_pos = (int(SIZE[0]/2), int(SIZE[1]/2), int(SIZE[2]/2))
     keys = list(voxels.keys())
-    start_pos = stot(keys[int(random.random()*len(keys))])
+    start_pos = vec.stot(keys[int(random.random()*len(keys))])
     # start_pos = (int(random.random()*SIZE[0]), int(random.random()*SIZE[1]), int(random.random()*SIZE[2]-1))
 
     # Set up dict for voxels that have already been built
     built_voxels = {}
-    built_voxels[ttos(start_pos)] = get(voxels, start_pos, True)
+    built_voxels[vec.ttos(start_pos)] = get(voxels, start_pos, True)
 
     # Build context list
     context = []
@@ -228,7 +205,7 @@ def generate_examples(voxels, context_size):
 
         # Add it to built voxels map
         index_at_position = get(voxels, next_voxel, True)
-        built_voxels[ttos(next_voxel)] = index_at_position
+        built_voxels[vec.ttos(next_voxel)] = index_at_position
 
         # Add it to context window
         context.append((next_voxel, index_at_position))
