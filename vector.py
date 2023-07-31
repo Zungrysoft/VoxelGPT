@@ -7,6 +7,20 @@ def add(v1, v2):
         v1[2] + v2[2],
     )
 
+def subtract(v1, v2):
+    return (
+        v1[0] - v2[0],
+        v1[1] - v2[1],
+        v1[2] - v2[2],
+    )
+
+def scale(v1, s):
+    return (
+        v1[0] * s,
+        v1[1] * s,
+        v1[2] * s,
+    )
+
 def stot(s):
     try:
         spl = s.split(',')
