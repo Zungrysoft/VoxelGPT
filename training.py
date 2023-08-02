@@ -120,8 +120,8 @@ def get_voxel_score(pos, context):
     total += len(context)/(vec.dist(pos, center_pos) + 0.01)
     return total * (random.random() + 1)
 
-# Decide the coordinates of the next voxel to pick
-def pick_next_voxel(built_voxels, context):
+# Pick by building outwards
+def pick_next_voxel_clump(built_voxels, context):
     cur_pos = context[-1][0]
     best_score = 0
     best_voxel = None
@@ -140,7 +140,7 @@ def pick_next_voxel(built_voxels, context):
 
     # Check some random voxels farther away
     check_count = 15
-    check_radius = 5
+    check_radius = 3
     while best_voxel == None:
         # check_count > 0 or
 
@@ -161,8 +161,8 @@ def pick_next_voxel(built_voxels, context):
 
     return best_voxel
 
-# Decide the coordinates of the next voxel to pick
-def pick_next_voxel_old(built_voxels, context):
+# Pick linearly in size
+def pick_next_voxel_linear(built_voxels, context):
     x, y, z = context[-1][0]
 
     # X axis
@@ -179,6 +179,17 @@ def pick_next_voxel_old(built_voxels, context):
             z += 1
 
     return (x, y, z)
+
+def pick_next_voxel_random(built_voxels, context):
+    pick = (math.floor(random.random() * SIZE[0]), math.floor(random.random() * SIZE[1]), math.floor(random.random() * SIZE[2]))
+    while (vec.ttos(pick) in built_voxels):
+        pick = pick_next_voxel_linear(built_voxels, [(pick, 1)])
+
+    return pick
+
+# Decide the coordinates of the next voxel to pick
+def pick_next_voxel(built_voxels, context):
+    return pick_next_voxel_random(built_voxels, context)
 
 # Generate one training example
 def generate_examples(voxels, context_size):
