@@ -67,6 +67,16 @@ def embed(index, position, color_index, palette, embedding_size):
     # Return
     return embedding
 
+def embed_nptest(index, position, color_index, palette, embedding_size):
+    pos_index = position[0] + (position[1] * SIZE[0]) + (position[2] * SIZE[0] * SIZE[1])
+
+    embedding = []
+    for i in range(embedding_size):
+        embedding.append(1 if i == pos_index else 0)
+    
+    return embedding
+
+
 # Encode a palette index into a one-hot-encoded output vector
 def encode_one_hot(index, length):
     # Change UNDECIDED into AIR
