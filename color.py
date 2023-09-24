@@ -1,3 +1,5 @@
+import json
+
 def rgb_to_hsv(rgb):
     r, g, b = rgb
     r /= 255
@@ -76,3 +78,9 @@ def expand_palette(palette):
             "hsl": rgb_to_hsl(rgb),
         })
     return ret
+
+def load_palette():
+    with open('data/palette.json', 'r') as json_file:
+        raw_palette = json.load(json_file)['colors']
+        palette = expand_palette(raw_palette)
+    return palette
